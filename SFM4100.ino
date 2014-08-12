@@ -7,9 +7,9 @@
 #define _SFM4100_DATAREQ_ 0xF1
 #define CRC_POLYNOMIAL 0x131
 
-const double O2CAL = 1.0; //Put the right number here
+const double H2CAL = 1.0; //Put the right number here
 
-double O2_sccm;
+double H2_sccm;
 
 char msg[120];
 
@@ -25,10 +25,9 @@ void loop() {
     Serial.println("Failed to read SFM4100 data.");
   }
   else {
-    sprintf(msg, "O2 flow = %.2f sccm.", O2_sccm);
+    sprintf (msg, "H2 flow = %d.%.2d", (int)H2_sccm, (int)((H2_sccm-(int)(H2_sccm))*100));
     Serial.println(msg);
     
-    controlStepper();
   }
   
   //Wait to do it again
@@ -56,8 +55,8 @@ boolean readSFM4100() {
     
   //Do the checksum
   if (checkCRC(flowData, 0x02, checkSum)) {
-    int O2int = flowData[1] | (flowData[0] << 8);
-    O2_sccm = (double)O2int / O2CAL;
+    int H2int = flowData[1] | (flowData[0] << 8);
+    H2_sccm = (double)H2int / H2CAL;
   }
   else {
     Serial.println("Invalid data received from the SFM4100!");
@@ -92,10 +91,4 @@ boolean checkCRC(uint8_t data[], uint8_t nBytes, uint8_t checkSum) {
   return true;
 }
 
-void controlStepper() {
-  
-  Serial.println("What?  I don't know how to control the stepper!");
-  
-  return;
-}
 
