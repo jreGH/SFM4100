@@ -7,7 +7,8 @@
 #define _SFM4100_DATAREQ_ 0xF1
 #define CRC_POLYNOMIAL 0x131
 
-const double H2CAL = 1.0; //Put the right number here
+const double H2CAL = 1.0; 
+double pressure = 1.0; //put in correct value here
 
 double H2_sccm;
 
@@ -56,7 +57,7 @@ boolean readSFM4100() {
   //Do the checksum
   if (checkCRC(flowData, 0x02, checkSum)) {
     int H2int = flowData[1] | (flowData[0] << 8);
-    H2_sccm = (double)H2int / H2CAL;
+    sensirionCal ((double)H2int, pressure);
   }
   else {
     Serial.println("Invalid data received from the SFM4100!");
@@ -64,6 +65,15 @@ boolean readSFM4100() {
   }
   
   return true;
+}
+
+void sensirionCal(double measurement, double pressure)
+{
+//pressure is the measured gauge pressure (psi)
+//Linear fit ([slope intercept]) to the data
+double p[2] = {1.1523,283.7969};
+double p7[2] = {1.4488,213.9459};
+ H2_sccm= (measurement - p[1] - (p7[1]-p[1])/7 * pressure) / (p[0] + (p7[0] - p[0])/7 * pressure);
 }
 
 boolean checkCRC(uint8_t data[], uint8_t nBytes, uint8_t checkSum) {
