@@ -7,6 +7,12 @@
 #define _SFM4100_DATAREQ_ 0xF1
 #define CRC_POLYNOMIAL 0x131
 
+const double O2CAL = 1.0; //Put the right number here
+
+double O2_sccm;
+
+char msg[120];
+
 void setup() {
   Serial.begin(9600);
   
@@ -14,11 +20,24 @@ void setup() {
 }
 
 void loop() {
-  int flowMeas;
-  uint8_t flowData[2];
   
-  if (!readSFM100()) {
+  if (!readSFM4100()) {
+    Serial.println("Failed to read SFM4100 data.");
   }
+  else {
+    sprintf(msg, "O2 flow = %.2f sccm.", O2_sccm);
+    Serial.println(msg);
+    
+    controlStepper();
+  }
+  
+  //Wait to do it again
+  delay(3000);
+}
+
+boolean readSFM4100() {
+  uint8_t flowData[2];
+  uint8_t checkSum;
   
   //Request a measurement
   Wire.beginTransmission(_SFM4100_I2C_ADDR_);
@@ -31,22 +50,22 @@ void loop() {
   
   //Now read a response
   Wire.requestFrom(_SFM4100_I2C_ADDR_, 3);
-  uint8_t flowData[0] = Wire.read();
-  uint8_t flowData[1] = Wire.read();
-  uint8_t uERR = Wire.read();
+  flowData[0] = Wire.read();
+  flowData[1] = Wire.read();
+  checkSum = Wire.read();
     
-  //Checksum
-  if (checkCRC(flowData, 0x02, uERR) {
-    flowMeas = flowData[1] | (flowData[0] << 8);
+  //Do the checksum
+  if (checkCRC(flowData, 0x02, checkSum)) {
+    int O2int = flowData[1] | (flowData[0] << 8);
+    O2_sccm = (double)O2int / O2CAL;
   }
   else {
     Serial.println("Invalid data received from the SFM4100!");
+    return false;
   }
   
-  //Wait to do it again
-  delay(3000);
+  return true;
 }
-
 
 boolean checkCRC(uint8_t data[], uint8_t nBytes, uint8_t checkSum) {
   uint8_t crc = 0;
@@ -66,10 +85,17 @@ boolean checkCRC(uint8_t data[], uint8_t nBytes, uint8_t checkSum) {
     
   }
   
-  if (crc != checksum) {
+  if (crc != checkSum) {
     return false;
   }
   
   return true;
+}
+
+void controlStepper() {
+  
+  Serial.println("What?  I don't know how to control the stepper!");
+  
+  return;
 }
 
