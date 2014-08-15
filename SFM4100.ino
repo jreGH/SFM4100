@@ -71,8 +71,8 @@ void sensirionCal(double measurement, double pressure)
 {
 //pressure is the measured gauge pressure (psi)
 //Linear fit ([slope intercept]) to the data
-double p[2] = {1.1523,283.7969};
-double p7[2] = {1.4488,213.9459};
+double p[2] = {1.1523,-283.7969};
+double p7[2] = {1.4488,-213.9459};
  H2_sccm= (measurement - p[1] - (p7[1]-p[1])/7 * pressure) / (p[0] + (p7[0] - p[0])/7 * pressure);
 }
 
